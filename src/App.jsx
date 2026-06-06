@@ -242,17 +242,29 @@ const App = () => {
   }, [saveRefreshToken, refreshToken]);
 
   /**
-   * Add or remove client credentials from local storage
+   * Add or remove client ID from local storage based on preferences.
+   * clientSecret is NEVER stored in localStorage for security reasons.
    */
   useEffect(() => {
     if (saveClientCredentials) {
       localStorage.setItem('clientId', clientId);
-      localStorage.setItem('clientSecret', clientSecret);
     } else {
       localStorage.removeItem('clientId');
-      localStorage.removeItem('clientSecret');
     }
-  }, [saveClientCredentials, clientId, clientSecret]);
+  }, [saveClientCredentials, clientId]);
+
+  /**
+   * Store clientSecret in sessionStorage for redirect survival.
+   * Automatically cleans up legacy clientSecret from localStorage if present.
+   */
+  useEffect(() => {
+    if (clientSecret) {
+      sessionStorage.setItem('clientSecret', clientSecret);
+    } else {
+      sessionStorage.removeItem('clientSecret');
+    }
+    localStorage.removeItem('clientSecret');
+  }, [clientSecret]);
 
   /**
    * Handles the scope checkbox change
@@ -376,6 +388,11 @@ const App = () => {
             {authMethod === 'standard' && (
               <InputBox label="Client Secret" value={clientSecret} onChange={setClientSecret} />
             )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 mt-1">
+            <Checkbox checked={saveClientCredentials} onClick={() => setSaveClientCredentials(!saveClientCredentials)} label="Save Client ID" />
+            <Checkbox checked={saveRefreshToken} onClick={() => setSaveRefreshToken(!saveRefreshToken)} label="Save Refresh Token" />
           </div>
 
           <div className="text-3xl font-semibold m-3">
