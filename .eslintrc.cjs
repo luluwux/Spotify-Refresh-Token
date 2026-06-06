@@ -18,4 +18,14 @@ module.exports = {
       { allowConstantExport: true },
     ],
   },
+  overrides: [
+    {
+      files: ['src/components/ui/**/*.jsx'],
+      rules: {
+        'react/prop-types': 'off',
+        'react-refresh/only-export-components': 'off',
+        'no-unused-vars': 'off'
+      }
+    }
+  ]
 }
