@@ -5,6 +5,7 @@ import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { useSearchParams } from 'react-router-dom';
 import Checkbox from './components/CheckBox';
 import InputBox from './components/Input';
+import { generateCodeVerifier, generateCodeChallenge } from './utils/pkce';
 
 const allScopes = [
   'ugc-image-upload',
@@ -39,6 +40,10 @@ callbackUri = callbackUri.endsWith('/') ? callbackUri.slice(0, callbackUri.lengt
 const App = () => {
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
+
+  const [authMethod, setAuthMethod] = useState(() => {
+    return sessionStorage.getItem('authMethod') || 'pkce';
+  });
 
   const [refreshToken, setRefreshToken] = useState('');
   const [accessToken, setAccessToken] = useState('');
@@ -92,20 +97,36 @@ const App = () => {
    *
    * @returns {Promise<Object>} The response from the API containing the access token
    */
-  const getTokens = () => axios.post(
-    'https://accounts.spotify.com/api/token',
-    QueryString.stringify({
-      code,
-      redirect_uri: callbackUri,
-      grant_type: 'authorization_code',
-    }),
-    {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
-      },
-    },
-  );
+  const getTokens = (method, cId, cSecret, codeVal) => {
+    const isPkce = method === 'pkce';
+    const postData = isPkce
+      ? {
+          client_id: cId,
+          code: codeVal,
+          redirect_uri: callbackUri,
+          grant_type: 'authorization_code',
+          code_verifier: sessionStorage.getItem('code_verifier'),
+        }
+      : {
+          code: codeVal,
+          redirect_uri: callbackUri,
+          grant_type: 'authorization_code',
+        };
+
+    const headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    };
+
+    if (!isPkce) {
+      headers.Authorization = `Basic ${btoa(`${cId}:${cSecret}`)}`;
+    }
+
+    return axios.post(
+      'https://accounts.spotify.com/api/token',
+      QueryString.stringify(postData),
+      { headers }
+    );
+  };
 
   /**
    * Sets the refresh token if it is in the URL
@@ -136,26 +157,39 @@ const App = () => {
       setScopes(...JSON.parse(sessionScopes));
     }
 
-    sessionStorage.clear();
+    // Selective cleanup of temporary session keys
+    sessionStorage.removeItem('clientId');
+    sessionStorage.removeItem('clientSecret');
+    sessionStorage.removeItem('scope');
   }, []);
 
   /**
-   * Gets the access token if the refresh token is set
+   * Gets the access token if the code and credentials are set
    */
   useEffect(() => {
-    if (code?.length > 0 && clientId.length > 0 && clientSecret.length > 0) {
-      getTokens().then((response) => {
-        setAccessToken(response.data.access_token);
-        setRefreshToken(response.data.refresh_token);
-        setSearchParams((params) => {
-          params.delete('code');
-          return searchParams;
-        });
-      }).catch((error) => {
-        console.error(error);
-      });
+    if (code?.length > 0 && clientId.length > 0) {
+      const isPkce = authMethod === 'pkce';
+      const hasSecret = clientSecret.length > 0;
+
+      if (isPkce || hasSecret) {
+        getTokens(authMethod, clientId, clientSecret, code)
+          .then((response) => {
+            setAccessToken(response.data.access_token);
+            setRefreshToken(response.data.refresh_token);
+            setSearchParams((params) => {
+              params.delete('code');
+              return params;
+            });
+            // Clean up temporary authentication variables
+            sessionStorage.removeItem('code_verifier');
+            sessionStorage.removeItem('authMethod');
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      }
     }
-  }, [clientId, clientSecret]);
+  }, [clientId, clientSecret, code, authMethod]);
 
   /**
    * Gets the data from the Spotify API if the access token is set
@@ -244,17 +278,24 @@ const App = () => {
   /**
    * Handles the submit button click, which will redirect the user to the Spotify login page
    */
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     sessionStorage.setItem('clientId', clientId);
     sessionStorage.setItem('clientSecret', clientSecret);
+    sessionStorage.setItem('authMethod', authMethod);
 
     const selectedScopes = allSelected ? allScopes : scopes;
     sessionStorage.setItem('scope', JSON.stringify(selectedScopes));
 
-    /** we include the clientId and the clientSecret in the
-     *  redirect uri to avoid having to store them in the browser */
     const scope = selectedScopes.join(' ');
-    const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${callbackUri}`;
+    let queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${callbackUri}`;
+
+    if (authMethod === 'pkce') {
+      const verifier = generateCodeVerifier();
+      sessionStorage.setItem('code_verifier', verifier);
+      const challenge = await generateCodeChallenge(verifier);
+      queryString += `&code_challenge_method=S256&code_challenge=${challenge}`;
+    }
+
     window.location.replace(queryString);
   };
 
@@ -311,9 +352,30 @@ const App = () => {
         )}
 
         <div className="bg-neutral-900 rounded-xl p-5 text-center grid grid-cols-1 gap-3 border-t border-neutral-500/10">
-          <div className="grid grid-cols-2 gap-2">
+          
+          {/* Auth Method Selector */}
+          <div className="grid grid-cols-2 gap-2 bg-neutral-800 p-2 rounded-xl">
+            <button
+              type="button"
+              className={`p-3 rounded-lg font-semibold duration-150 ${authMethod === 'pkce' ? 'bg-[#1DB954] text-black font-bold' : 'bg-neutral-700 hover:bg-neutral-600 text-white'}`}
+              onClick={() => setAuthMethod('pkce')}
+            >
+              🔐 PKCE Flow (Güvenli)
+            </button>
+            <button
+              type="button"
+              className={`p-3 rounded-lg font-semibold duration-150 ${authMethod === 'standard' ? 'bg-neutral-600 text-white' : 'bg-neutral-700 hover:bg-neutral-600 text-neutral-400'}`}
+              onClick={() => setAuthMethod('standard')}
+            >
+              🔑 Standart Flow
+            </button>
+          </div>
+
+          <div className={`grid gap-2 ${authMethod === 'pkce' ? 'grid-cols-1' : 'grid-cols-2'}`}>
             <InputBox label="Client ID" value={clientId} onChange={setClientId} />
-            <InputBox label="Client Secret" value={clientSecret} onChange={setClientSecret} />
+            {authMethod === 'standard' && (
+              <InputBox label="Client Secret" value={clientSecret} onChange={setClientSecret} />
+            )}
           </div>
 
           <div className="text-3xl font-semibold m-3">
