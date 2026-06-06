@@ -102,7 +102,7 @@ const App = () => {
     {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${new Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+        Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
       },
     },
   );
