@@ -41,7 +41,82 @@ let callbackUri = window.location.href.split('/').slice(0, 4).join('/');
 // if the callback uri ends with a slash, remove it
 callbackUri = callbackUri.endsWith('/') ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
 
+const t = {
+  tr: {
+    title: "Spotify Refresh Token Alıcı",
+    description: "Hobi projeleriniz ve Discord botlarınız için süresiz Spotify Refresh Token'larını güvenli ve kolayca elde edin.",
+    errorTitle: "Hata oluştu",
+    errorClientId: "Lütfen geçerli bir Client ID girin.",
+    errorClientSecret: "Standart akış için Client Secret girmelisiniz.",
+    errorExchange: "Token takas işlemi başarısız oldu.",
+    errorProfile: "Profil bilgileri alınamadı.",
+    accessToken: "Access Token",
+    accessTokenDesc: "1 saat geçerlidir",
+    refreshToken: "Refresh Token",
+    refreshTokenDesc: "Süresiz ve kalıcı anahtarınız",
+    copiedAlert: "Kopyalandı!",
+    copyText: "Kopyala",
+    userProfileOutput: "Kullanıcı Bilgileri Çıktısı (Örnek)",
+    dashboardLink: "Spotify Dashboard'a Git",
+    dashboardDesc: "Uygulama oluşturmak veya mevcut uygulamalarınızı yönetmek için Spotify Developer portalını açın.",
+    redirectUri: "Yönlendirme URI (Redirect URI):",
+    copyCallback: "Panoya kopyalamak için tıklayın.",
+    configTitle: "Yapılandırma ve İzinler",
+    authMethod: "Yetkilendirme Yöntemi",
+    pkceFlow: "PKCE Flow (Güvenli)",
+    standardFlow: "Standart Flow",
+    clientIdPlaceholder: "Spotify Client ID girin",
+    clientSecretPlaceholder: "Spotify Client Secret girin",
+    saveClientId: "Client ID'yi Kaydet",
+    saveRefreshToken: "Refresh Tokenı Kaydet",
+    scopesTitle: "İzin Kapsamları (Scopes)",
+    selectAll: "Tümünü Seç",
+    deselectAll: "Seçimi Kaldır",
+    submitButton: "Spotify ile Giriş Yap & Bağlan",
+    copyright: "Tüm Hakları Saklıdır.",
+    developedBy: "Developed by"
+  },
+  en: {
+    title: "Spotify Refresh Token Getter",
+    description: "Easily and securely obtain lifetime Spotify Refresh Tokens for your hobby projects and Discord bots.",
+    errorTitle: "An error occurred",
+    errorClientId: "Please enter a valid Client ID.",
+    errorClientSecret: "You must enter a Client Secret for Standard Flow.",
+    errorExchange: "Token exchange operation failed.",
+    errorProfile: "Could not retrieve profile info.",
+    accessToken: "Access Token",
+    accessTokenDesc: "Valid for 1 hour",
+    refreshToken: "Refresh Token",
+    refreshTokenDesc: "Your lifetime and persistent key",
+    copiedAlert: "Copied!",
+    copyText: "Copy",
+    userProfileOutput: "User Info Output (Example)",
+    dashboardLink: "Go to Spotify Dashboard",
+    dashboardDesc: "Open the Spotify Developer portal to create applications or manage your existing ones.",
+    redirectUri: "Redirect URI:",
+    copyCallback: "Click to copy to clipboard.",
+    configTitle: "Configuration and Permissions",
+    authMethod: "Authorization Method",
+    pkceFlow: "PKCE Flow (Secure)",
+    standardFlow: "Standard Flow",
+    clientIdPlaceholder: "Enter Spotify Client ID",
+    clientSecretPlaceholder: "Enter Spotify Client Secret",
+    saveClientId: "Save Client ID",
+    saveRefreshToken: "Save Refresh Token",
+    scopesTitle: "Permissions (Scopes)",
+    selectAll: "Select All",
+    deselectAll: "Deselect All",
+    submitButton: "Log in with Spotify & Connect",
+    copyright: "All Rights Reserved.",
+    developedBy: "Developed by"
+  }
+};
+
 const App = () => {
+  const [lang, setLang] = useState(() => {
+    return localStorage.getItem('lang') || 'tr';
+  });
+
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
 
@@ -209,7 +284,7 @@ const App = () => {
           })
           .catch((error) => {
             console.error(error);
-            const errDesc = error.response?.data?.error_description || error.response?.data?.error || error.message || 'Token takas işlemi başarısız oldu.';
+            const errDesc = error.response?.data?.error_description || error.response?.data?.error || error.message || t[lang].errorExchange;
             setErrorMsg(errDesc);
           });
       }
@@ -236,10 +311,11 @@ const App = () => {
         });
       }).catch((error) => {
         console.error(error);
-        const errDesc = error.response?.data?.error_description || error.response?.data?.error || error.message || 'Profil bilgileri alınamadı.';
+        const errDesc = error.response?.data?.error_description || error.response?.data?.error || error.message || t[lang].errorProfile;
         setErrorMsg(errDesc);
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken]);
 
   /**
@@ -321,11 +397,11 @@ const App = () => {
   const handleSubmit = async () => {
     setErrorMsg('');
     if (!clientId) {
-      setErrorMsg('Lütfen geçerli bir Client ID girin.');
+      setErrorMsg(t[lang].errorClientId);
       return;
     }
     if (authMethod === 'standard' && !clientSecret) {
-      setErrorMsg('Standart akış için Client Secret girmelisiniz.');
+      setErrorMsg(t[lang].errorClientSecret);
       return;
     }
 
@@ -354,7 +430,39 @@ const App = () => {
       <div className="w-full max-w-[900px] flex flex-col gap-6">
         
         {/* Header/Hero Section */}
-        <Card className="glass-panel border-neutral-800 bg-neutral-900/60 backdrop-blur-md rounded-2xl">
+        <Card className="glass-panel border-neutral-800 bg-neutral-900/60 backdrop-blur-md rounded-2xl relative">
+          <div className="absolute top-4 right-4 flex gap-1 z-10">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-7 px-2.5 text-xs font-semibold rounded-lg transition-all duration-150 ${
+                lang === 'tr'
+                  ? 'bg-[#1DB954]/10 text-[#1DB954] border border-[#1DB954]/20'
+                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/40'
+              }`}
+              onClick={() => {
+                setLang('tr');
+                localStorage.setItem('lang', 'tr');
+              }}
+            >
+              TR
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-7 px-2.5 text-xs font-semibold rounded-lg transition-all duration-150 ${
+                lang === 'en'
+                  ? 'bg-[#1DB954]/10 text-[#1DB954] border border-[#1DB954]/20'
+                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/40'
+              }`}
+              onClick={() => {
+                setLang('en');
+                localStorage.setItem('lang', 'en');
+              }}
+            >
+              EN
+            </Button>
+          </div>
           <CardHeader className="flex flex-col items-center text-center pb-6">
             <div className="w-16 h-16 bg-[#1DB954]/10 rounded-full flex items-center justify-center mb-2 animate-pulse-soft">
               <svg className="w-8 h-8 text-[#1DB954]" viewBox="0 0 24 24" fill="currentColor">
@@ -362,10 +470,10 @@ const App = () => {
               </svg>
             </div>
             <CardTitle className="text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-white via-neutral-100 to-neutral-400 bg-clip-text text-transparent">
-              Spotify Refresh Token Alıcı
+              {t[lang].title}
             </CardTitle>
             <CardDescription className="text-sm md:text-base text-neutral-400 max-w-[500px] mt-2">
-              Hobi projeleriniz ve Discord botlarınız için süresiz Spotify Refresh {"Token'larını"} güvenli ve kolayca elde edin.
+              {t[lang].description}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -376,7 +484,7 @@ const App = () => {
             <div className="flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
               <div>
-                <AlertTitle className="font-semibold text-red-200 text-left">Hata oluştu</AlertTitle>
+                <AlertTitle className="font-semibold text-red-200 text-left">{t[lang].errorTitle}</AlertTitle>
                 <AlertDescription className="text-red-300 text-xs mt-0.5 text-left">{errorMsg}</AlertDescription>
               </div>
             </div>
@@ -395,15 +503,15 @@ const App = () => {
         {accessToken.length > 0 && (
           <Card className="glass-panel border-neutral-800 bg-neutral-900/60 backdrop-blur-md rounded-2xl p-6 flex flex-col gap-4 text-center">
             <div>
-              <CardTitle className="text-lg font-bold text-neutral-200">Access Token</CardTitle>
-              <CardDescription className="text-xs text-neutral-500">1 saat geçerlidir</CardDescription>
+              <CardTitle className="text-lg font-bold text-neutral-200">{t[lang].accessToken}</CardTitle>
+              <CardDescription className="text-xs text-neutral-500">{t[lang].accessTokenDesc}</CardDescription>
             </div>
             <div className="relative flex items-center bg-neutral-950/50 border border-neutral-800 rounded-xl">
               <input type="text" readOnly value={accessToken} className="bg-transparent w-full text-xs font-mono text-neutral-300 px-4 py-3.5 outline-none pr-24 select-all" />
               <CopyToClipboard text={accessToken} onCopy={handleCopyAccess}>
                 <Button size="sm" className={`absolute right-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 focus:outline-none ${copiedAccess ? 'bg-[#1DB954]/20 text-[#1DB954] hover:bg-[#1DB954]/20' : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'}`}>
                   {copiedAccess ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
-                  {copiedAccess ? 'Kopyalandı' : 'Kopyayla'}
+                  {copiedAccess ? t[lang].copiedAlert : t[lang].copyText}
                 </Button>
               </CopyToClipboard>
             </div>
@@ -413,15 +521,15 @@ const App = () => {
         {refreshToken.length > 0 && (
           <Card className="glass-panel border-neutral-800 bg-neutral-900/60 backdrop-blur-md rounded-2xl p-6 flex flex-col gap-4 text-center">
             <div>
-              <CardTitle className="text-lg font-bold text-[#1DB954]">Refresh Token</CardTitle>
-              <CardDescription className="text-xs text-neutral-500">Süresiz ve kalıcı anahtarınız</CardDescription>
+              <CardTitle className="text-lg font-bold text-[#1DB954]">{t[lang].refreshToken}</CardTitle>
+              <CardDescription className="text-xs text-neutral-500">{t[lang].refreshTokenDesc}</CardDescription>
             </div>
             <div className="relative flex items-center bg-neutral-950/50 border border-neutral-800 rounded-xl">
               <input type="text" readOnly value={refreshToken} className="bg-transparent w-full text-xs font-mono text-[#1DB954] px-4 py-3.5 outline-none pr-24 select-all" />
               <CopyToClipboard text={refreshToken} onCopy={handleCopyRefresh}>
                 <Button size="sm" className={`absolute right-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 focus:outline-none ${copiedRefresh ? 'bg-[#1DB954]/20 text-[#1DB954] hover:bg-[#1DB954]/20' : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'}`}>
                   {copiedRefresh ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
-                  {copiedRefresh ? 'Kopyalandı' : 'Kopyala'}
+                  {copiedRefresh ? t[lang].copiedAlert : t[lang].copyText}
                 </Button>
               </CopyToClipboard>
             </div>
@@ -430,7 +538,7 @@ const App = () => {
 
         {outputs.filled && (
           <Card className="glass-panel border-neutral-800 bg-neutral-900/60 backdrop-blur-md rounded-2xl p-6 flex flex-col gap-3">
-            <CardTitle className="text-lg font-bold text-neutral-200 text-center">Kullanıcı Bilgileri Çıktısı (Örnek)</CardTitle>
+            <CardTitle className="text-lg font-bold text-neutral-200 text-center">{t[lang].userProfileOutput}</CardTitle>
             <div className="bg-neutral-950/60 p-3.5 rounded-xl border border-neutral-800">
               <textarea className="w-full text-xs font-mono bg-transparent text-neutral-400 p-0 outline-none h-48 resize-none scrollbar" readOnly value={JSON.stringify(outputs.data, null, 2)} />
             </div>
@@ -441,24 +549,24 @@ const App = () => {
           <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
             <a href="https://developer.spotify.com/dashboard/applications" target="_blank" rel="noreferrer" className="glass-panel border border-neutral-800 bg-neutral-900/60 backdrop-blur-md rounded-2xl p-6 text-center hover:bg-neutral-800/40 flex flex-col items-center justify-center gap-2 transition-all duration-200">
               <div className="text-base font-semibold text-[#1DB954] hover:underline flex items-center gap-1.5">
-                {"Spotify Dashboard'a Git"}
+                {t[lang].dashboardLink}
                 <ExternalLink className="w-4 h-4" />
               </div>
               <p className="text-xs text-neutral-400">
-                Uygulama oluşturmak veya mevcut uygulamalarınızı yönetmek için Spotify Developer portalını açın.
+                {t[lang].dashboardDesc}
               </p>
             </a>
             <CopyToClipboard text={callbackUri} onCopy={handleCopyCallback}>
               <div className="glass-panel border border-neutral-800 bg-neutral-900/60 backdrop-blur-md rounded-2xl p-6 text-center cursor-pointer hover:bg-neutral-800/40 flex flex-col items-center justify-center gap-2 transition-all duration-200">
                 <div className="text-sm font-semibold text-neutral-300">
-                  Yönlendirme URI (Redirect URI):
+                  {t[lang].redirectUri}
                 </div>
                 <code className="bg-neutral-950/80 px-2.5 py-1.5 rounded-lg text-xs font-mono text-[#1DB954] border border-neutral-800 select-all">
                   {callbackUri}
                 </code>
                 <span className="text-[11px] text-neutral-500 flex items-center gap-1">
                   {copiedCallback ? <Check className="w-3 h-3 text-[#1DB954]" /> : <Copy className="w-3 h-3" />}
-                  {copiedCallback ? 'Kopyalandı!' : 'Panoya kopyalamak için tıklayın.'}
+                  {copiedCallback ? t[lang].copiedAlert : t[lang].copyCallback}
                 </span>
               </div>
             </CopyToClipboard>
@@ -469,39 +577,39 @@ const App = () => {
         <Card className="glass-panel border-neutral-800 bg-neutral-900/60 backdrop-blur-md rounded-2xl p-6 md:p-8 flex flex-col gap-6">
           <CardHeader className="p-0 border-b border-neutral-800 pb-3 flex flex-row items-center gap-2">
             <Settings className="w-5 h-5 text-neutral-400" />
-            <CardTitle className="text-xl font-bold text-neutral-200">Yapılandırma ve İzinler</CardTitle>
+            <CardTitle className="text-xl font-bold text-neutral-200">{t[lang].configTitle}</CardTitle>
           </CardHeader>
           
           <CardContent className="p-0 flex flex-col gap-6">
             {/* Auth Method Selector */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-neutral-400 pl-1 text-left">Yetkilendirme Yöntemi</label>
+              <label className="text-sm font-semibold text-neutral-400 pl-1 text-left">{t[lang].authMethod}</label>
               <div className="grid grid-cols-2 gap-2 bg-neutral-950/40 p-1 rounded-2xl border border-neutral-800/80">
                 <Button
                   type="button"
                   variant="ghost"
                   className={`py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 focus:outline-none h-auto ${
                     authMethod === 'pkce'
-                      ? 'bg-[#1DB954] hover:bg-[#1ed760] text-black shadow-[0_4px_12px_rgba(29,185,84,0.2)] font-bold'
+                      ? 'bg-[#1DB954] hover:bg-[#1ed760] text-black shadow-sm font-bold'
                       : 'text-neutral-400 hover:text-white hover:bg-neutral-900/40'
                   }`}
                   onClick={() => setAuthMethod('pkce')}
                 >
                   <Lock className="w-4 h-4 mr-2" />
-                  PKCE Flow (Güvenli)
+                  {t[lang].pkceFlow}
                 </Button>
                 <Button
                   type="button"
                   variant="ghost"
                   className={`py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 focus:outline-none h-auto ${
                     authMethod === 'standard'
-                      ? 'bg-neutral-800 border-neutral-700 text-white shadow-lg font-bold'
+                      ? 'bg-neutral-800 border-neutral-700 text-white shadow-sm font-bold'
                       : 'text-neutral-400 hover:text-white hover:bg-neutral-900/40'
                   }`}
                   onClick={() => setAuthMethod('standard')}
                 >
                   <Key className="w-4 h-4 mr-2" />
-                  Standart Flow
+                  {t[lang].standardFlow}
                 </Button>
               </div>
             </div>
@@ -510,7 +618,7 @@ const App = () => {
               <InputBox
                 label="Client ID"
                 value={clientId}
-                placeholder="Spotify Client ID girin"
+                placeholder={t[lang].clientIdPlaceholder}
                 onChange={setClientId}
               />
               {authMethod === 'standard' && (
@@ -518,7 +626,7 @@ const App = () => {
                   label="Client Secret"
                   type="password"
                   value={clientSecret}
-                  placeholder="Spotify Client Secret girin"
+                  placeholder={t[lang].clientSecretPlaceholder}
                   onChange={setClientSecret}
                 />
               )}
@@ -528,25 +636,25 @@ const App = () => {
               <Checkbox
                 checked={saveClientCredentials}
                 onClick={() => setSaveClientCredentials(!saveClientCredentials)}
-                label="Client ID'yi Kaydet"
+                label={t[lang].saveClientId}
               />
               <Checkbox
                 checked={saveRefreshToken}
                 onClick={() => setSaveRefreshToken(!saveRefreshToken)}
-                label="Refresh Tokenı Kaydet"
+                label={t[lang].saveRefreshToken}
               />
             </div>
 
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between border-t border-neutral-800 pt-4">
-                <span className="text-lg font-bold text-neutral-200">İzin Kapsamları (Scopes)</span>
+                <span className="text-lg font-bold text-neutral-200">{t[lang].scopesTitle}</span>
                 <Button
                   variant="link"
                   type="button"
                   onClick={handleSelectAll}
                   className="text-xs font-semibold text-[#1DB954] hover:text-[#1ed760] p-0 h-auto"
                 >
-                  {allSelected ? 'Seçimi Kaldır' : 'Tümünü Seç'}
+                  {allSelected ? t[lang].deselectAll : t[lang].selectAll}
                 </Button>
               </div>
               <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 max-h-[300px] overflow-y-auto pr-2">
@@ -566,19 +674,19 @@ const App = () => {
         <Button
           type="submit"
           size="lg"
-          className="w-full bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold py-6 rounded-2xl shadow-[0_4px_20px_rgba(29,185,84,0.15)] hover:shadow-[0_6px_24px_rgba(29,185,84,0.25)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-200 text-base"
+          className="w-full bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold py-6 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-[1px] active:translate-y-0 transition-all duration-200 text-base"
           onClick={handleSubmit}
         >
           <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.565.387-.86.207-2.377-1.454-5.37-1.783-8.894-.982-.336.076-.67-.137-.747-.473-.077-.337.137-.67.473-.748 3.854-.88 7.15-.5 9.822 1.137.295.18.387.563.206.86zm1.225-2.72c-.227.367-.707.487-1.074.26-2.72-1.672-6.87-2.157-10.08-1.182-.413.125-.85-.107-.975-.52-.125-.413.107-.85.52-.975 3.66-1.11 8.225-.567 11.35 1.355.367.226.488.707.26 1.073zm.107-2.836C14.493 8.878 8.82 8.69 5.537 9.686c-.506.153-1.04-.135-1.194-.64-.153-.507.135-1.04.64-1.194 3.76-1.14 10.012-.924 14.07 1.485.456.27.608.86.337 1.317-.27.457-.86.61-1.317.337z" />
           </svg>
-          Spotify ile Giriş Yap & Bağlan
+          {t[lang].submitButton}
         </Button>
 
         {/* Footer */}
         <footer className="text-center py-6 border-t border-neutral-800/50 flex flex-col sm:flex-row justify-between items-center px-4 rounded-2xl bg-neutral-950/20 text-neutral-500 text-xs gap-3">
           <div>
-            © 2022-2026 Tüm Hakları Saklıdır.
+            © 2022-2026 {t[lang].copyright}
           </div>
           <div className="flex items-center gap-1">
             Developed with <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500 inline mx-0.5" /> by
