@@ -35,11 +35,9 @@ const allScopes = [
 
 const allScopesAlias = 'all';
 
-// Get the callback uri to give to spotify
-let callbackUri = window.location.href.split('/').slice(0, 4).join('/');
-
-// if the callback uri ends with a slash, remove it
-callbackUri = callbackUri.endsWith('/') ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
+// Get the callback uri to give to spotify (without query parameters or trailing slash)
+let callbackUri = window.location.origin + window.location.pathname;
+callbackUri = callbackUri.endsWith('/') ? callbackUri.slice(0, -1) : callbackUri;
 
 const t = {
   tr: {
