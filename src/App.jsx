@@ -688,7 +688,7 @@ const App = () => {
           </div>
           <div className="flex items-center gap-1">
             Developed with <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500 inline mx-0.5" /> by
-            <a className="text-[#1DB954] hover:text-[#1ed760] font-semibold transition-colors ml-1" href="https://github.com/luluwux" target="_blank" rel="noreferrer">
+            <a className="text-[#1DB954] hover:text-[#1ed760] font-semibold transition-colors ml-1" href="https://github.com/lulushuz" target="_blank" rel="noreferrer">
               Lulu
             </a>
           </div>
